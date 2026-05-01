@@ -9,6 +9,7 @@ import HomePage          from './pages/HomePage';
 import LoginPage         from './pages/LoginPage';
 import RegisterPage      from './pages/RegisterPage';
 import DashboardRouter   from './pages/DashboardRouter';
+import AdminDashboardRouter from './pages/AdminDashboardRouter';
 import ProjectsPage      from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import MyTasksPage       from './pages/MyTasksPage';
@@ -29,6 +30,7 @@ export default function App() {
 
               {/* Protected */}
               <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
+              <Route path="/admindashboard" element={<ProtectedRoute><AdminDashboardRouter /></ProtectedRoute>} />
               <Route path="/projects"  element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
               <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
               <Route path="/my-tasks" element={<ProtectedRoute><MyTasksPage /></ProtectedRoute>} />
