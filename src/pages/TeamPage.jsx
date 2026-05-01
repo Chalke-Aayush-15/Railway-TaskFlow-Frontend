@@ -13,7 +13,7 @@ export default function TeamPage() {
   const { show } = useToast();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
-  const [projectMembers, setProjectMembers] = useState({}); // { projectId: members[] }
+  const [projectMembers, setProjectMembers] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +28,6 @@ export default function TeamPage() {
       const projs = projRes.projects || projRes || [];
       setProjects(projs);
 
-      // load members for each project
       const membersMap = {};
       await Promise.all(
         projs.map(async p => {
@@ -60,56 +59,89 @@ export default function TeamPage() {
 
   return (
     <AppLayout>
-      <Topbar title="Team" subtitle={`${allMembers.length} total members across ${projects.length} projects`} />
+      <Topbar
+        title="Team"
+        subtitle={`${allMembers.length} members across ${projects.length} projects`}
+      />
 
-      <div style={{ padding: 28, animation: 'fadeIn 0.3s ease both' }}>
+      <div style={{ padding: 28, animation: 'fadeIn 0.4s ease both' }}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><Spinner size={32} /></div>
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+            <div style={{ textAlign: 'center' }}>
+              <Spinner size={36} />
+              <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text3)' }}>Loading team…</div>
+            </div>
+          </div>
         ) : (
           <>
             {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 14, marginBottom: 26 }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: 14, marginBottom: 28,
+              animation: 'fadeUp 0.4s ease 0.05s both',
+            }}>
               <StatCard label="Total Members" value={allMembers.length} icon="👥" />
-              <StatCard label="Admins"    value={admins.length}  icon="🔑" accent="var(--purple)" />
-              <StatCard label="Members"   value={members.length} icon="👤" accent="var(--primary)" />
-              <StatCard label="Projects"  value={projects.length} icon="📁" accent="var(--accent)" />
+              <StatCard label="Admins"    value={admins.length}   icon="🔑" accent="var(--accent-2, #845EC2)" />
+              <StatCard label="Members"   value={members.length}  icon="👤" accent="var(--primary)" />
+              <StatCard label="Projects"  value={projects.length} icon="📁" accent="var(--success)" />
             </div>
 
             {allMembers.length === 0 ? (
               <Card>
-                <EmptyState icon="👥" title="No team members yet" description="Add members to your projects to see them here" />
+                <EmptyState
+                  icon="👥"
+                  title="No team members yet"
+                  description="Add members to your projects to see them here"
+                />
               </Card>
             ) : (
               <>
                 {/* Admins */}
                 {admins.length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <SectionHeader title="Admins" count={admins.length} color="var(--purple)" />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
-                      {admins.map(m => <MemberCard key={m.id || m._id} member={m} projects={projects} projectMembers={projectMembers} />)}
+                  <div style={{ marginBottom: 28, animation: 'fadeUp 0.4s ease 0.1s both' }}>
+                    <SectionLabel title="Admins" count={admins.length} color="var(--accent-2, #845EC2)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 14 }}>
+                      {admins.map(m => (
+                        <MemberCard key={m.id || m._id} member={m} projects={projects} projectMembers={projectMembers} />
+                      ))}
                     </div>
                   </div>
                 )}
 
                 {/* Members */}
                 {members.length > 0 && (
-                  <div style={{ marginBottom: 24 }}>
-                    <SectionHeader title="Members" count={members.length} color="var(--primary)" />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
-                      {members.map(m => <MemberCard key={m.id || m._id} member={m} projects={projects} projectMembers={projectMembers} />)}
+                  <div style={{ marginBottom: 28, animation: 'fadeUp 0.4s ease 0.15s both' }}>
+                    <SectionLabel title="Members" count={members.length} color="var(--primary)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 14 }}>
+                      {members.map(m => (
+                        <MemberCard key={m.id || m._id} member={m} projects={projects} projectMembers={projectMembers} />
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Projects breakdown */}
-                <div>
-                  <SectionHeader title="Project Breakdown" count={projects.length} color="var(--accent)" />
-                  <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                {/* Project breakdown table */}
+                <div style={{ animation: 'fadeUp 0.4s ease 0.2s both' }}>
+                  <SectionLabel title="Project Breakdown" count={projects.length} color="var(--success)" />
+                  <div style={{
+                    background: 'var(--surface)',
+                    borderRadius: 'var(--radius-xl)',
+                    border: '1px solid var(--border)',
+                    overflow: 'hidden',
+                  }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--border)' }}>
                           {['Project', 'Members', 'Created'].map(h => (
-                            <th key={h} style={{ padding: '12px 18px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                            <th key={h} style={{
+                              padding: '12px 18px', textAlign: 'left',
+                              fontSize: 10, fontWeight: 700, color: 'var(--text3)',
+                              textTransform: 'uppercase', letterSpacing: '0.08em',
+                              background: 'var(--surface2)',
+                            }}>
+                              {h}
+                            </th>
                           ))}
                         </tr>
                       </thead>
@@ -118,7 +150,9 @@ export default function TeamPage() {
                           const pid = p.id || p._id;
                           const mems = projectMembers[pid] || [];
                           return (
-                            <tr key={pid} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
+                            <tr
+                              key={pid}
+                              style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.12s' }}
                               onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
                               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
@@ -126,18 +160,23 @@ export default function TeamPage() {
                                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
                               </td>
                               <td style={{ padding: '14px 18px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                   <div style={{ display: 'flex' }}>
                                     {mems.slice(0, 4).map((m, i) => (
-                                      <Avatar key={m.id || m._id} name={m.name} size={24}
+                                      <Avatar
+                                        key={m.id || m._id} name={m.name} size={24}
                                         style={{ marginLeft: i === 0 ? 0 : -8, border: '2px solid var(--surface)' }}
                                       />
                                     ))}
                                   </div>
-                                  <span style={{ fontSize: 12, color: 'var(--text3)' }}>{mems.length} member{mems.length !== 1 ? 's' : ''}</span>
+                                  <span style={{ fontSize: 12, color: 'var(--text3)' }}>
+                                    {mems.length} member{mems.length !== 1 ? 's' : ''}
+                                  </span>
                                 </div>
                               </td>
-                              <td style={{ padding: '14px 18px', fontSize: 12, color: 'var(--text3)' }}>{formatDate(p.createdAt)}</td>
+                              <td style={{ padding: '14px 18px', fontSize: 12, color: 'var(--text3)' }}>
+                                {formatDate(p.createdAt)}
+                              </td>
                             </tr>
                           );
                         })}
@@ -154,17 +193,32 @@ export default function TeamPage() {
   );
 }
 
-function SectionHeader({ title, count, color }) {
+function SectionLabel({ title, count, color }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
-      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{title}</span>
-      <span style={{ background: 'var(--surface2)', color: 'var(--text3)', fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 10, border: '1px solid var(--border)' }}>{count}</span>
+      <div style={{
+        width: 7, height: 7, borderRadius: '50%', background: color,
+        boxShadow: `0 0 8px ${color}80`,
+      }} />
+      <span style={{
+        fontSize: 11, fontWeight: 700, color: 'var(--text2)',
+        textTransform: 'uppercase', letterSpacing: '0.08em',
+      }}>
+        {title}
+      </span>
+      <span style={{
+        background: 'var(--surface2)', color: 'var(--text3)',
+        fontSize: 10, fontWeight: 700, padding: '1px 7px',
+        borderRadius: 10, border: '1px solid var(--border)',
+      }}>
+        {count}
+      </span>
     </div>
   );
 }
 
 function MemberCard({ member, projects, projectMembers }) {
+  const [hov, setHov] = useState(false);
   const memberProjects = projects.filter(p => {
     const pid = p.id || p._id;
     const mems = projectMembers[pid] || [];
@@ -172,29 +226,66 @@ function MemberCard({ member, projects, projectMembers }) {
   });
 
   return (
-    <div style={{
-      background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
-      border: '1px solid var(--border)', padding: '18px', boxShadow: 'var(--shadow-sm)',
-    }}>
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? 'var(--surface2)' : 'var(--surface)',
+        borderRadius: 'var(--radius-lg)',
+        border: `1px solid ${hov ? 'var(--border2)' : 'var(--border)'}`,
+        padding: 18,
+        boxShadow: hov ? 'var(--shadow)' : 'none',
+        transition: 'all 0.2s ease',
+        transform: hov ? 'translateY(-2px)' : 'none',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Top accent */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+        background: member.role === 'admin'
+          ? 'linear-gradient(90deg, var(--accent-2, #845EC2), var(--primary))'
+          : 'linear-gradient(90deg, var(--primary), var(--success))',
+        opacity: hov ? 0.8 : 0.3,
+        transition: 'opacity 0.2s',
+      }} />
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <Avatar name={member.name} size={40} />
+        <Avatar name={member.name} size={42} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</div>
-          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>{member.email}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {member.name}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {member.email}
+          </div>
         </div>
-        <Badge type={member.role === 'admin' ? 'admin' : 'member'}>{member.role}</Badge>
+        <Badge type={member.role === 'admin' ? 'admin' : 'member'}>
+          {member.role}
+        </Badge>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>
+
+      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
         {member.projectCount} project{member.projectCount !== 1 ? 's' : ''}
       </div>
+
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {memberProjects.slice(0, 3).map(p => (
-          <span key={p.id || p._id} style={{ background: 'var(--primary-light)', color: 'var(--primary)', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 10 }}>
+          <span key={p.id || p._id} style={{
+            background: 'var(--primary-light)', color: 'var(--primary)',
+            fontSize: 10, fontWeight: 600, padding: '2px 9px',
+            borderRadius: 10, border: '1px solid var(--primary-border)',
+          }}>
             {p.name}
           </span>
         ))}
         {memberProjects.length > 3 && (
-          <span style={{ background: 'var(--surface2)', color: 'var(--text3)', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 10 }}>
+          <span style={{
+            background: 'var(--surface2)', color: 'var(--text3)',
+            fontSize: 10, fontWeight: 600, padding: '2px 9px',
+            borderRadius: 10, border: '1px solid var(--border)',
+          }}>
             +{memberProjects.length - 3} more
           </span>
         )}
