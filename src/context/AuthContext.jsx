@@ -1,57 +1,68 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [user, setUser]     = useState(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('ttm_token');
-    const stored = localStorage.getItem('ttm_user');
-    if (token && stored) {
-      try {
-        setUser(JSON.parse(stored));
-        // optionally refresh: api.get('/auth/me').then(d => setUser(d.user || d)).catch(() => logout());
-      } catch { logout(); }
-    }
-    setLoading(false);
-  }, []);
-
+  // ✅ LOGIN
   const login = async (email, password) => {
-    const data = await api.post('/auth/login', { email, password });
-    const u = data.user || data;
-    localStorage.setItem('ttm_token', data.token);
-    localStorage.setItem('ttm_user', JSON.stringify(u));
-    setUser(u);
-    return u;
+    const res = await api.post('/auth/login', {
+      email,
+      password,
+    });
+
+    console.log("✅ LOGIN RESPONSE:", res);
+
+    // 🔥 FIX: support both formats
+    const token = res.access_token || res.token;
+
+    if (!token) {
+      throw new Error('No token received from server');
+    }
+
+    // ✅ SAVE TOKEN
+    localStorage.setItem('ttm_token', token);
+
+    console.log("💾 Saved token:", token);
+
+    // ✅ Fetch user AFTER token is saved
+    const me = await api.get('/auth/me');
+    setUser(me);
+
+    return me;
   };
 
-  const signup = async (name, email, password, role) => {
-    const data = await api.post('/auth/signup', { name, email, password, role });
-    const u = data.user || data;
-    localStorage.setItem('ttm_token', data.token);
-    localStorage.setItem('ttm_user', JSON.stringify(u));
-    setUser(u);
-    return u;
-  };
-
+  // ✅ LOGOUT
   const logout = () => {
     localStorage.removeItem('ttm_token');
-    localStorage.removeItem('ttm_user');
     setUser(null);
   };
 
-  const isAdmin = user?.role === 'admin';
+  // ✅ Auto-login on refresh
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = localStorage.getItem('ttm_token');
+      if (!token) return;
+
+      try {
+        const me = await api.get('/auth/me');
+        setUser(me);
+      } catch (err) {
+        console.error("Auto login failed:", err);
+        logout();
+      }
+    };
+
+    loadUser();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);

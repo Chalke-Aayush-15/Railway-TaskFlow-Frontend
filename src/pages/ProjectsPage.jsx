@@ -15,7 +15,7 @@ function getProjectIcon(name = '') {
 }
 
 export default function ProjectsPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { show } = useToast();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
@@ -23,6 +23,8 @@ export default function ProjectsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [createDescription, setCreateDescription] = useState('');
+  const [createdBy, setCreatedBy] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -37,12 +39,15 @@ export default function ProjectsPage() {
   };
 
   useEffect(() => { load(); }, []);
+  console.log('User ID in ProjectsPage:', user?.id);
 
   const handleCreate = async () => {
     if (!createName.trim()) return show('Project name is required', 'error');
     setCreating(true);
     try {
-      await api.post('/projects', { name: createName.trim() });
+      await api.post('/projects', { name: createName.trim(),
+  description: createDescription,
+  createdBy: user?.id || user?._id });
       show('Project created!');
       setCreateName('');
       setShowCreate(false);
@@ -128,38 +133,73 @@ export default function ProjectsPage() {
       </div>
 
       {showCreate && (
-        <Modal
-          title="Create New Project"
-          onClose={() => { setShowCreate(false); setCreateName(''); }}
-        >
-          <Input
-            label="Project Name"
-            placeholder="e.g. Website Redesign, Q4 Campaign…"
-            value={createName}
-            onChange={e => setCreateName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCreate()}
-            autoFocus
-          />
-          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: -10, marginBottom: 18 }}>
-            Press Enter or click Create to save
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <Button
-              variant="ghost"
-              onClick={() => { setShowCreate(false); setCreateName(''); }}
-              style={{ flex: 1 }}
-            >
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleCreate} loading={creating} style={{ flex: 1 }}>
-              Create Project
-            </Button>
-          </div>
-        </Modal>
-      )}
+      <Modal
+        title="Create New Project"
+        onClose={() => {
+          setShowCreate(false);
+          setCreateName('');
+          setCreateDescription('');
+          setCreatedBy('');
+        }}
+      >
+        <Input
+          label="Project Name"
+          placeholder="e.g. Website Redesign, Q4 Campaign…"
+          value={createName}
+          onChange={e => setCreateName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleCreate()}
+          autoFocus
+        />
+
+        <Input
+          label="Description"
+          placeholder="Brief description of the project"
+          value={createDescription}
+          onChange={e => setCreateDescription(e.target.value)}
+        />
+
+        {/* <Input
+          label="Created By (User ID)"
+          placeholder="Enter creator user ID"
+          type="number"
+          value={createdBy}
+          onChange={e => setCreatedBy(e.target.value)}
+        /> */}
+        
+
+        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: -10, marginBottom: 18 }}>
+          Press Enter or click Create to save
+        </div>
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setShowCreate(false);
+              setCreateName('');
+              setCreateDescription('');
+              setCreatedBy('');
+            }}
+            style={{ flex: 1 }}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={handleCreate}
+            loading={creating}
+            style={{ flex: 1 }}
+          >
+            Create Project
+          </Button>
+        </div>
+      </Modal>
+    )}
     </AppLayout>
   );
 }
+
 
 function ProjectCard({ project: p, pid, bg, isAdmin, onNavigate, onDelete }) {
   const [hov, setHov] = useState(false);
