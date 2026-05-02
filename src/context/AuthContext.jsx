@@ -6,9 +6,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // ✅ SIGNUP
+  // ✅ SIGNUP  (backend route: POST /auth/signup)
   const signup = async (name, email, password, role) => {
-    const res = await api.post('/auth/register', { name, email, password, role });
+    const res = await api.post('/auth/signup', { name, email, password, role });
 
     console.log('✅ SIGNUP RESPONSE:', res);
 
@@ -17,7 +17,8 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem('ttm_token', token);
 
-    const me = await api.get('/auth/me');
+    // TokenResponse already contains the full user object — no extra /me call needed
+    const me = res.user;
     setUser(me);
     return me;
   };
@@ -33,7 +34,8 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem('ttm_token', token);
 
-    const me = await api.get('/auth/me');
+    // TokenResponse already contains the full user object — no extra /me call needed
+    const me = res.user;
     setUser(me);
     return me;
   };
