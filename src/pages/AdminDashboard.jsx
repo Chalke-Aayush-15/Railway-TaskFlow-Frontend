@@ -32,14 +32,18 @@ export default function AdminDashboard() {
   const load = async () => {
     setLoading(true);
     try {
-      const [tasksRes, projRes] = await Promise.all([
-        api.get('/tasks/me/assigned').catch(() => ({ tasks: [] })),
-        api.get('/projects').catch(() => ({ projects: [] })),
-      ]);
+      const projRes = await api.get('/projects').catch(() => []);
       const projs = projRes.projects || projRes || [];
-      const taskList = tasksRes.tasks || tasksRes || [];
-      setTasks(taskList);
       setProjects(projs);
+
+      // Fetch tasks for every project in parallel (admin sees all tasks)
+      const taskArrays = await Promise.all(
+        projs.map(p =>
+          api.get(`/projects/${p.id || p._id}/tasks`).catch(() => [])
+        )
+      );
+      const allTasks = taskArrays.flat();
+      setTasks(allTasks);
 
       // Load members from all projects (deduplicated)
       const membersMap = {};
@@ -53,7 +57,7 @@ export default function AdminDashboard() {
       }));
       setAllMembers(Object.values(membersMap));
     } catch (e) {
-      show(e, 'error');
+      show(e?.message || 'Failed to load dashboard', 'error');
     } finally {
       setLoading(false);
     }
