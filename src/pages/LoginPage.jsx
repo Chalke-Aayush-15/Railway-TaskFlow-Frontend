@@ -33,11 +33,11 @@ export default function LoginPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      const me = await login(form.email, form.password);
       show('Welcome back! 👋');
-      navigate('/dashboard');
+      navigate(me?.role === 'admin' ? '/admindashboard' : '/dashboard');
     } catch (e) {
-      show(e, 'error');
+      show(e?.message || 'Login failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

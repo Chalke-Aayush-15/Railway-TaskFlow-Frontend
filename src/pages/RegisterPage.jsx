@@ -34,11 +34,11 @@ export default function RegisterPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await signup(form.name, form.email, form.password, form.role);
+      const me = await signup(form.name, form.email, form.password, form.role);
       show('Account created! Welcome to TaskFlow 🎉');
-      navigate('/dashboard');
+      navigate(me?.role === 'admin' ? '/admindashboard' : '/dashboard');
     } catch (e) {
-      show(e, 'error');
+      show(e?.message || 'Registration failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

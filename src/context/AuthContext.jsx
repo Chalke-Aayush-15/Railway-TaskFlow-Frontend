@@ -6,31 +6,35 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // ✅ LOGIN
-  const login = async (email, password) => {
-    const res = await api.post('/auth/login', {
-      email,
-      password,
-    });
+  // ✅ SIGNUP
+  const signup = async (name, email, password, role) => {
+    const res = await api.post('/auth/register', { name, email, password, role });
 
-    console.log("✅ LOGIN RESPONSE:", res);
+    console.log('✅ SIGNUP RESPONSE:', res);
 
-    // 🔥 FIX: support both formats
     const token = res.access_token || res.token;
+    if (!token) throw new Error('No token received from server');
 
-    if (!token) {
-      throw new Error('No token received from server');
-    }
-
-    // ✅ SAVE TOKEN
     localStorage.setItem('ttm_token', token);
 
-    console.log("💾 Saved token:", token);
-
-    // ✅ Fetch user AFTER token is saved
     const me = await api.get('/auth/me');
     setUser(me);
+    return me;
+  };
 
+  // ✅ LOGIN
+  const login = async (email, password) => {
+    const res = await api.post('/auth/login', { email, password });
+
+    console.log('✅ LOGIN RESPONSE:', res);
+
+    const token = res.access_token || res.token;
+    if (!token) throw new Error('No token received from server');
+
+    localStorage.setItem('ttm_token', token);
+
+    const me = await api.get('/auth/me');
+    setUser(me);
     return me;
   };
 
@@ -45,21 +49,22 @@ export const AuthProvider = ({ children }) => {
     const loadUser = async () => {
       const token = localStorage.getItem('ttm_token');
       if (!token) return;
-
       try {
         const me = await api.get('/auth/me');
         setUser(me);
       } catch (err) {
-        console.error("Auto login failed:", err);
+        console.error('Auto login failed:', err);
         logout();
       }
     };
-
     loadUser();
   }, []);
 
+  // Derive isAdmin from user role
+  const isAdmin = user?.role === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, signup, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
