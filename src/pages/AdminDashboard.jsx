@@ -19,15 +19,17 @@ export default function AdminDashboard() {
   const { show } = useToast();
   const navigate = useNavigate();
 
-  const [tasks, setTasks]       = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [allMembers, setAllMembers] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [taskModal, setTaskModal]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [taskModal, setTaskModal] = useState(null);
   const [statusModal, setStatusModal] = useState(null);
   const [createProjectModal, setCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
+  const [createDescription, setCreateDescription] = useState('');
+  const [createdBy, setCreatedBy] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -53,7 +55,7 @@ export default function AdminDashboard() {
           (mRes.members || mRes || []).forEach(m => {
             membersMap[m.id || m._id] = m;
           });
-        } catch {}
+        } catch { }
       }));
       setAllMembers(Object.values(membersMap));
     } catch (e) {
@@ -69,7 +71,11 @@ export default function AdminDashboard() {
     if (!newProjectName.trim()) return show('Project name is required', 'error');
     setCreatingProject(true);
     try {
-      await api.post('/projects', { name: newProjectName.trim() });
+      await api.post('/projects', {
+        name: newProjectName.trim(),
+        description: createDescription,
+        createdBy: user?.id || user?._id
+      });
       show('Project created!');
       setNewProjectName('');
       setCreateProjectModal(false);
@@ -81,11 +87,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const total        = tasks.length;
-  const done         = tasks.filter(t => t.status === 'done').length;
-  const inProg       = tasks.filter(t => t.status === 'in-progress').length;
+  const total = tasks.length;
+  const done = tasks.filter(t => t.status === 'done').length;
+  const inProg = tasks.filter(t => t.status === 'in-progress').length;
   const overdueTasks = tasks.filter(t => isOverdue(t));
-  const pct          = total ? Math.round((done / total) * 100) : 0;
+  const pct = total ? Math.round((done / total) * 100) : 0;
 
   return (
     <AppLayout>
@@ -153,12 +159,12 @@ export default function AdminDashboard() {
               gap: 14, marginBottom: 22,
               animation: 'fadeUp 0.4s ease 0.05s both',
             }}>
-              <StatCard label="Total Tasks"   value={total}               icon="📋" />
-              <StatCard label="Completed"     value={done}                icon="✅" accent="var(--success)" />
-              <StatCard label="In Progress"   value={inProg}              icon="⚡" accent="var(--primary)" />
-              <StatCard label="Overdue"       value={overdueTasks.length} icon="⚠️" accent="var(--danger)" />
-              <StatCard label="Projects"      value={projects.length}     icon="📁" accent="var(--accent-2)" />
-              <StatCard label="Team Members"  value={allMembers.length}   icon="👥" accent="var(--success)" />
+              <StatCard label="Total Tasks" value={total} icon="📋" />
+              <StatCard label="Completed" value={done} icon="✅" accent="var(--success)" />
+              <StatCard label="In Progress" value={inProg} icon="⚡" accent="var(--primary)" />
+              <StatCard label="Overdue" value={overdueTasks.length} icon="⚠️" accent="var(--danger)" />
+              <StatCard label="Projects" value={projects.length} icon="📁" accent="var(--accent-2)" />
+              <StatCard label="Team Members" value={allMembers.length} icon="👥" accent="var(--success)" />
             </div>
 
             {/* ── Progress bar ── */}
@@ -182,8 +188,8 @@ export default function AdminDashboard() {
                   {[
                     { color: 'var(--success)', label: `${done} done` },
                     { color: 'var(--primary)', label: `${inProg} in progress` },
-                    { color: '#9ca3af',        label: `${total - done - inProg} to do` },
-                    { color: 'var(--danger)',  label: `${overdueTasks.length} overdue` },
+                    { color: '#9ca3af', label: `${total - done - inProg} to do` },
+                    { color: 'var(--danger)', label: `${overdueTasks.length} overdue` },
                   ].map(({ color, label }) => (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
                       <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}60` }} />
@@ -347,6 +353,18 @@ export default function AdminDashboard() {
             onKeyDown={e => e.key === 'Enter' && handleCreateProject()}
             autoFocus
           />
+
+          <Input
+            label="Description"
+            placeholder="Brief description of the project"
+            value={createDescription}
+            onChange={e => setCreateDescription(e.target.value)}
+          />
+
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: -10, marginBottom: 18 }}>
+            Press Enter or click Create to save
+          </div>
+
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             <Button variant="ghost" onClick={() => { setCreateProjectModal(false); setNewProjectName(''); }} style={{ flex: 1 }}>
               Cancel

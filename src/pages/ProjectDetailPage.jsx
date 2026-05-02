@@ -33,14 +33,23 @@ export default function ProjectDetailPage() {
   const [memberId, setMemberId]   = useState('');
   const [addingMember, setAddingMember] = useState(false);
   const [view, setView]           = useState('kanban');
+  const [accessDenied, setAccessDenied] = useState(false);
 
   const load = async () => {
     setLoading(true);
+    setAccessDenied(false);
     try {
       const [projRes, tasksRes, membersRes] = await Promise.all([
-        api.get(`/projects/${id}`).catch(() => null),
-        api.get(`/projects/${id}/tasks`),
-        api.get(`/projects/${id}/members`),
+        api.get(`/projects/${id}`).catch((err) => {
+          // 500 = backend issue; still try to render with partial data
+          console.warn('Project fetch error:', err);
+          return null;
+        }),
+        api.get(`/projects/${id}/tasks`).catch((err) => {
+          if (err === 'forbidden') setAccessDenied(true);
+          return [];
+        }),
+        api.get(`/projects/${id}/members`).catch(() => []),
       ]);
       setProject(projRes?.project || projRes);
       setTasks(tasksRes?.tasks || tasksRes || []);
@@ -56,9 +65,11 @@ export default function ProjectDetailPage() {
 
   const handleAddMember = async () => {
     if (!memberId.trim()) return show('User ID is required', 'error');
+    const uid = Number(memberId.trim());
+    if (!uid || isNaN(uid)) return show('User ID must be a valid number', 'error');
     setAddingMember(true);
     try {
-      await api.post(`/projects/${id}/members`, { userId: memberId.trim() });
+      await api.post(`/projects/${id}/members`, { user_id: uid });
       show('Member added!');
       setMemberId('');
       setAddMemberModal(false);
@@ -157,6 +168,23 @@ export default function ProjectDetailPage() {
               <Spinner size={36} />
               <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text3)' }}>Loading project…</div>
             </div>
+          </div>
+        ) : accessDenied ? (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            paddingTop: 80, gap: 16, textAlign: 'center',
+            animation: 'fadeIn 0.4s ease both',
+          }}>
+            <div style={{ fontSize: 48 }}>🔒</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display)' }}>
+              Access Denied
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', maxWidth: 360, lineHeight: 1.7 }}>
+              You are not a member of this project. Ask your admin to add you, then come back.
+            </div>
+            <Button variant="ghost" onClick={() => navigate('/projects')}>
+              ← Back to Projects
+            </Button>
           </div>
         ) : (
           <>

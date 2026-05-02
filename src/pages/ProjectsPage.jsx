@@ -46,8 +46,8 @@ export default function ProjectsPage() {
     setCreating(true);
     try {
       await api.post('/projects', { name: createName.trim(),
-  description: createDescription,
-  createdBy: user?.id || user?._id });
+        description: createDescription,
+        createdBy: user?.id || user?._id });
       show('Project created!');
       setCreateName('');
       setShowCreate(false);
@@ -156,16 +156,7 @@ export default function ProjectsPage() {
           placeholder="Brief description of the project"
           value={createDescription}
           onChange={e => setCreateDescription(e.target.value)}
-        />
-
-        {/* <Input
-          label="Created By (User ID)"
-          placeholder="Enter creator user ID"
-          type="number"
-          value={createdBy}
-          onChange={e => setCreatedBy(e.target.value)}
-        /> */}
-        
+        />        
 
         <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: -10, marginBottom: 18 }}>
           Press Enter or click Create to save

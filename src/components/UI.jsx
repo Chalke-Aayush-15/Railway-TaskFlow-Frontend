@@ -174,19 +174,24 @@ export function Select({ label, children, style, ...props }) {
           background: 'var(--surface2)',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius)', fontFamily: 'var(--font)', fontSize: 14,
-          color: 'var(--text)', outline: 'none', cursor: 'pointer', appearance: 'none',
+          color: props.disabled ? 'var(--text3)' : 'var(--text)',
+          outline: 'none',
+          cursor: props.disabled ? 'not-allowed' : 'pointer',
+          opacity: props.disabled ? 0.6 : 1,
+          appearance: 'none',
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235C5B72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center',
-          transition: 'border-color 0.18s',
+          transition: 'border-color 0.18s, opacity 0.18s',
         }}
-        onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        onFocus={e => !props.disabled && (e.target.style.borderColor = 'var(--primary)')}
+        onBlur={e => (e.target.style.borderColor = 'var(--border)')}
       >
         {children}
       </select>
     </div>
   );
 }
+
 
 /* ─── Badge ──────────────────────────────────────────────────── */
 const BADGE_STYLES = {
